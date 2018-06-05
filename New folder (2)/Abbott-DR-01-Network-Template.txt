@@ -1,0 +1,914 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Abbott-DR-01-Network-Template.txt - This is the inputs template used to create core networking services - VPC, Subnet, RTB, NACL and SGs in DR region i.e Frankfurt",
+	"Parameters": {
+		"01VPCCIDRBlock": {
+			"Default": "172.29.32.0/22",
+			"Description": "Please enter the CIDR Block for the Production/Staging VPC",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"02VpcAzs1": {
+			"Description": "Availability zone #1 in which subnets should be created",
+			"Type": "String",
+			"Default": "eu-central-1a"
+		},
+		"03VpcAzs2": {
+			"Description": "Availability zone #2 in which subnets should be created",
+			"Type": "String",
+			"Default": "eu-central-1b"
+		},
+		"04MgmtSubnetCIDR": {
+			"Default": "172.29.32.0/27",
+			"Description": "Please enter the CIDR Block for the Management Subnet: Bastion, Jenkins+GIT, AV and Kiwi Log Server ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"05FWSubnetCIDR": {
+			"Default": "172.29.32.32/27",
+			"Description": "Please enter the CIDR Block for the FW Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"06WAFubnetCIDR": {
+			"Default": "172.29.32.64/27",
+			"Description": "Please enter the CIDR Block for the WAF Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"07AppSubnetCIDR": {
+			"Default": "172.29.33.0/27",
+			"Description": "Please enter the CIDR Block for the App Subnet",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"08DispatcherSubnetCIDR": {
+			"Default": "172.29.33.32/27",
+			"Description": "Please enter the CIDR Block for the Dispatcher Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"09AuthorSubnetCIDR": {
+			"Default": "172.29.33.64/27",
+			"Description": "Please enter the CIDR Block for the Author Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"10PublisherSubnetCIDR": {
+			"Default": "172.29.33.96/27",
+			"Description": "Please enter the CIDR Block for the Publisher Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"11CacheSubnetCIDR": {
+			"Default": "172.29.33.128/27",
+			"Description": "Please enter the CIDR Block for the Cache Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"12FrontSubnetCIDR": {
+			"Default": "172.29.33.160/27",
+			"Description": "Please enter the CIDR Block for the Front Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"13BOSubnetCIDR": {
+			"Default": "172.29.33.192/27",
+			"Description": "Please enter the CIDR Block for the BO Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"14SFTPSubnetCIDR": {
+			"Default": "172.29.33.224/27",
+			"Description": "Please enter the CIDR Block for the FTP Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"15NFSSubnetCIDR": {
+			"Default": "172.29.34.0/27",
+			"Description": "Please enter the CIDR Block for the BO and FTP Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"16RDSDBSubnet1CIDR": {
+			"Default": "172.29.34.32/27",
+			"Description": "Please enter the CIDR Block for the RDS Subnet in AZ1 ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"17RDSDBSubnet2CIDR": {
+			"Default": "172.29.34.64/27",
+			"Description": "Please enter the CIDR Block for the RDS Subnet in AZ 2",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		}
+	},
+	"Resources": {
+	
+		"01DRVPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": {"Ref": "01VPCCIDRBlock" },
+                "EnableDnsSupport": "true",
+                "EnableDnsHostnames": "true",
+                "Tags": [
+							{ "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+							{ "Key": "Name",        "Value": "Abbott-DR-VPC" }
+						]            
+			}
+        },
+		
+		"02DRVpcInternetGateway": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value": "Abbott-DR-VPC-IGW" }             
+                ]
+            }
+		},
+		
+		"03DRVpcAttachIGW": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": { "Ref": "01DRVPC"  },
+                "InternetGatewayId": {
+                    "Ref": "02DRVpcInternetGateway"
+                }
+            }
+        },			
+		
+		"04DrVpcMgmtSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "04MgmtSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-Mgmt-SN" }  ]
+            }
+        },
+		"05DrVpcFWSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "05FWSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-FW-SN" }  ]
+            }
+        },
+		"06DrVpcWAFSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "06WAFubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-WAF-SN" }  ]
+            }
+        },
+		"07DrVpcAppSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "07AppSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-App-SN" }  ]
+            }
+        },
+		"08DrVpcDispatcherSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "08DispatcherSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-Dispatcher-SN" }  ]
+            }
+        },
+		"09DrVpcAuthorSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "09AuthorSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-Author-SN" }  ]
+            }
+        },
+		"10DrVpcPublisherSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "10PublisherSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-Publisher-SN" }  ]
+            }
+        },
+		
+		"11DrVpcCacheSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "11CacheSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-Cache-SN" }  ]
+            }
+        },
+		"12DrVpcFrontSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "12FrontSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-Front-SN" }  ]
+            }
+        },
+		"13DrVpcBOSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "13BOSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-BO-SN" }  ]
+            }
+        },
+		
+		"14DrVpcFTPSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "14SFTPSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-SFTP-SN" }  ]
+            }
+        },
+		
+		"15DrVpcNFSSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "15NFSSubnetCIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-NFS-SN" }  ]
+            }
+        },
+		
+		"16DrVpcRDSSubnet1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "02VpcAzs1" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "16RDSDBSubnet1CIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-RDS-SN-1" }  ]
+            }
+        },
+		
+		"17DrVpcRDSSubnet2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone":  {"Ref": "03VpcAzs2" },
+                "VpcId": { "Ref": "01DRVPC" },
+                "CidrBlock": {"Ref": "17RDSDBSubnet2CIDR" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                    { "Key": "Name",     "Value":  "Abbott-DR-RDS-SN-2" }  ]
+            }
+        },
+		"DrVpcPublicRoutetable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": { "Ref": "01DRVPC" },
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "Abbott-DR-PUB-RTB" }
+                ]
+            }
+		},
+		"PublicRouteViaIGW" : {
+			  "Type" : "AWS::EC2::Route",
+			  "Properties" : {
+				"RouteTableId" : { "Ref" : "DrVpcPublicRoutetable" },
+				"DestinationCidrBlock" : "0.0.0.0/0",
+				"GatewayId" : { "Ref" : "02DRVpcInternetGateway" }
+			  }
+		},	
+		"DrVpcPrivateRoutetable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": { "Ref": "01DRVPC" },
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "Abbott-DR-PRI-RTB" }
+                ]
+            }
+		},	
+		"DrVpcPrivateRoutetableForWAF": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": { "Ref": "01DRVPC" },
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "Abbott-DR-PRI-WAF-RTB" }
+                ]
+            }
+		},
+		"DrVpcPrivateRtbAssocForWAFSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "06DrVpcWAFSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetableForWAF" }
+            }
+        }, 
+		"DrVpcPublicRtbAssocForFWSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "05DrVpcFWSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForMgmtSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "04DrVpcMgmtSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForAppSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "07DrVpcAppSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForDispatcherSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "08DrVpcDispatcherSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForPublisherSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "10DrVpcPublisherSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForAuthorSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "09DrVpcAuthorSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForCacheSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "11DrVpcCacheSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForFrontSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "12DrVpcFrontSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForBOSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "13DrVpcBOSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForFTPSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "14DrVpcFTPSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForNFSSubnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "15DrVpcNFSSubnet" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },		
+		"DrVpcPrivateRtbAssocForRDS1Subnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "16DrVpcRDSSubnet1" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		"DrVpcPrivateRtbAssocForRDS2Subnet": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {  "Ref": "17DrVpcRDSSubnet2" },
+                "RouteTableId": { "Ref": "DrVpcPrivateRoutetable" }
+            }
+        },
+		
+		"DrVpcNetworkAcl": {
+            "Type": "AWS::EC2::NetworkAcl",
+            "Properties": {
+				"VpcId": { "Ref": "01DRVPC" },
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "Abbott-DR-VPC-NACL" }
+                ]
+            }
+        },
+		
+		"01sgBastion" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Bastion",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Bastion-Host-SG" }
+                ]
+            }    
+		},	
+		
+		"02sgJenkins" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Jenkins",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Jenkins-SG" }
+                ]
+            }    
+		},
+		"03sgAntiVirus" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for AV",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-AV-SG" }
+                ]
+            }    
+		},	
+		
+		"04sgKiwiLogServer" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Kiwi Log Server",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-LOG-SG" }
+                ]
+            }    
+		},
+		
+		"05sgFirewall" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Firewall",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Firewall-SG" }
+                ]
+            }    
+		},
+		"06sgWAF" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for WAF",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-WAF-SG" }
+                ]
+            }    
+		},
+		
+		
+		"07sgApp" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for App",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-App-SG" }
+                ]
+            }    
+		},			
+		"08sgDispatcher" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Dispatcher",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Dispatcher-SG" }
+                ]
+            }    
+		},	
+		"09sgAuthor" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Author",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Author-SG" }
+                ]
+            }    
+		},
+		"10sgPublisher" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Publisher",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Publisher-SG" }
+                ]
+            }    
+		},	
+			
+		"11sgCache" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Cache",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Cache-SG" }
+                ]
+            }    
+		},	
+		"12sgFront" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Front",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Front-SG" }
+                ]
+            }    
+		},	
+		"13sgBO" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for BO",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-BO-SG" }
+                ]
+            }    
+		},	
+		"14sgFtp" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for FTP",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Author-SG" }
+                ]
+            }    
+		},
+		"15sgNfs" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for NFS",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-NFS-SG" }
+                ]
+            }    
+		},
+		"16sgMemcacheForRdsOG" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for MemcacheRds",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-RDS-MEMCACHE-OptGrp-SG" }
+                ]
+            }    
+		},
+		"17sgRDSReadReplica" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for RDSReadReplica",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-RDS-READ-REPLICA-SG" }
+                ]
+            }    
+		},			
+		"18sgDispatcherELB" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Dispatcher ELB",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Dispatcher-ELB-SG" }
+                ]
+            }    
+		},
+		"19sgAppELB" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for App ELB",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-App-ELB-SG" }
+                ]
+            }    
+		},
+		"20sgPublisherELB" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Publisher ELB",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Publisher-ELB-SG" }
+                ]
+            }    
+		},
+		"21sgCacheELB" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Cache ELB",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-Cache-ELB-SG" }
+                ]
+            }    
+		},
+		"22sgFrontELB" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Front ELB",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-FRONT-ELB-SG" }
+                ]
+            }    
+		},
+		"23sgBOELB" : {
+		    "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for BO ELB",
+                "VpcId": { "Ref" : "01DRVPC" },
+                "Tags" : [
+                   { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+				   { "Key": "Name",        "Value": "DR-VPC-BO-ELB-SG" }
+                ]
+            }    
+		}
+			
+		
+	},
+	
+	"Outputs": {
+		"01DRVPCId" : {
+			"Description" : "VPC ID created",
+		    "Value" : { "Ref" : "01DRVPC" }
+		},
+		"02DrVpcMgmtSubnetId" : {
+			"Description" : "Mgmt Subnet ID",
+		    "Value" : { "Ref" : "04DrVpcMgmtSubnet" }
+		},
+		"03DrVpcFWSubnetId" : {
+			"Description" : "FW Subnet ID",
+		    "Value" : { "Ref" : "05DrVpcFWSubnet" }
+		},
+		"04DrVpcWAFSubnetId" : {
+			"Description" : "FW Subnet ID",
+		    "Value" : { "Ref" : "06DrVpcWAFSubnet" }
+		},
+		"05DrVpcAppSubnetId" : {
+			"Description" : "App Subnet ID",
+		    "Value" : { "Ref" : "07DrVpcAppSubnet" }
+		},
+		"06DrVpcDispatcherSubnetId" : {
+			"Description" : "DISPATCHER Subnet ID",
+		    "Value" : { "Ref" : "08DrVpcDispatcherSubnet" }
+		},
+		"07DrVpcPublisherSubnetId" : {
+			"Description" : "PUBLISHER Subnet ID",
+		    "Value" : { "Ref" : "10DrVpcPublisherSubnet" }
+		},
+		"08DrVpcAuthorSubnetId" : {
+			"Description" : "AUTHOR Subnet ID",
+		    "Value" : { "Ref" : "09DrVpcAuthorSubnet" }
+		},
+		"09DrVpcCacheSubnetId" : {
+			"Description" : "Cache Subnet ID",
+		    "Value" : { "Ref" : "11DrVpcCacheSubnet" }
+		},
+		"10DrVpcFrontSubnetId" : {
+			"Description" : "MFE Subnet ID",
+		    "Value" : { "Ref" : "12DrVpcFrontSubnet" }
+		},
+		"11DrVpcBOSubnetId" : {
+			"Description" : "MBO Subnet Id",
+		    "Value" : { "Ref" : "13DrVpcBOSubnet" }
+		},
+		"12DrVpcSFTPSubnetId" : {
+			"Description" : "FTP Subnet Id",
+		    "Value" : { "Ref" : "14DrVpcFTPSubnet" }
+		},
+		"13DrVpcNFSSubnetId" : {
+			"Description" : "NFS Subnet Id",
+		    "Value" : { "Ref" : "15DrVpcNFSSubnet" }
+		},
+		"14DrVpcRDSSubnet1Id" : {
+			"Description" : "RDS 1 Subnet ID",
+		    "Value" : { "Ref" : "16DrVpcRDSSubnet1" }
+		},
+		"15DrVpcRDSSubnet2Id" : {
+			"Description" : "RDS 2 Subnet ID",
+		    "Value" : { "Ref" : "17DrVpcRDSSubnet2" }
+		},
+		"16sgbastionId": {
+			 "Description" : "Security Group for Bastion",
+			 "Value" :  { "Ref" : "01sgBastion" }
+		},
+		"17sgJenkinsId": {
+			 "Description" : "Security Group for Jenkins",
+			 "Value" :  { "Ref" : "02sgJenkins" }
+		},		
+		"18sgAntiVirusId": {
+			 "Description" : "Security Group for AV",
+			 "Value" :  { "Ref" : "03sgAntiVirus" }
+		},
+		
+		"19sgKiwiLogServerId": {
+			 "Description" : "Security Group for Log Server",
+			 "Value" :  { "Ref" : "04sgKiwiLogServer" }
+		},
+        "20sgFirewallId": {
+			 "Description" : "Security Group for Firewall",
+			 "Value" :  { "Ref" : "05sgFirewall" }
+		},
+		"21sgWAFId": {
+			 "Description" : "Security Group for Firewall",
+			 "Value" :  { "Ref" : "06sgWAF" }
+		},					
+		"22sgAppId": {
+			 "Description" : "Security Group for App Servers",
+			 "Value" :  { "Ref" : "07sgApp" }
+		},
+		
+		"23sgDispatcherId": {
+			 "Description" : "Security Group for Dispatcher Server",
+			 "Value" :  { "Ref" : "08sgDispatcher" }
+		},
+		"24sgAuthorId": {
+			 "Description" : "Security Group for Author Servers",
+			 "Value" :  { "Ref" : "09sgAuthor" }
+		},
+		"25sgPublisherId": {
+			 "Description" : "Security Group for Publisher Servers",
+			 "Value" :  { "Ref" : "10sgPublisher" }
+		},
+		"26sgCacheId": {
+			 "Description" : "Security Group for Cache Servers",
+			 "Value" :  { "Ref" : "11sgCache" }
+		},
+		"27sgFrontId": {
+			 "Description" : "Security Group for Front Servers",
+			 "Value" :  { "Ref" : "12sgFront" }
+		},
+		"28sgBOId": {
+			 "Description" : "Security Group for BO Servers",
+			 "Value" :  { "Ref" : "13sgBO" }
+		},		
+		"29sgFtpId": {
+			 "Description" : "Security Group for SFTP Servers",
+			 "Value" :  { "Ref" : "14sgFtp" }
+		},
+		"30sgFtpId": {
+			 "Description" : "Security Group for NFS Servers",
+			 "Value" :  { "Ref" : "15sgNfs" }
+		},
+		"31sgMemcacheForRdsOGId": { 
+			 "Description" : "Security Group for MBO ELB",
+			 "Value" :  { "Ref" : "16sgMemcacheForRdsOG" }
+		},
+		"32sgRDSReadReplicaId": {
+			 "Description" : "Security Group for MBO ELB",
+			 "Value" :  { "Ref" : "17sgRDSReadReplica" }
+		},
+		"33sgDispatcherELBId": {
+			 "Description" : "Security Group for Dispatcher ELB",
+			 "Value" :  { "Ref" : "18sgDispatcherELB" }
+		},
+		"34sgAppELBId": {
+			 "Description" : "Security Group for App ELB",
+			 "Value" :  { "Ref" : "19sgAppELB" }
+		},
+		"35sgPublisherELBId": {
+			 "Description" : "Security Group for Publisher ELB",
+			 "Value" :  { "Ref" : "20sgPublisherELB" }
+		},
+		"36sgCacheELBId": {
+			 "Description" : "Security Group for Cache ELB",
+			 "Value" :  { "Ref" : "21sgCacheELB" }
+		},
+		"37sgFrontELBId": {
+			 "Description" : "Security Group for magento FE ELB",
+			 "Value" :  { "Ref" : "22sgCacheELB" }
+		},
+		"38sgBOELBId": {
+			 "Description" : "Security Group for MBO ELB",
+			 "Value" :  { "Ref" : "23sgBOELB" }
+		}		
+		
+	}
+		
+}

@@ -1,0 +1,317 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Abbott-Dr-05-Security-Mgmt-Template.txt: This template creates FW, AV, WAF, Log Server, Bastion and Jenkins resources in DR region",
+	"Parameters": {
+		"01AbbottVPC": {
+			"Description": "Select the VPC for the Subnet",
+			"Default": "vpc-293dc841",
+			"Type": "AWS::EC2::VPC::Id",
+			"ConstraintDescription": "must be a existing valid VPC"
+		},
+		"02KeyName": {
+			"Description": "Name of Existing EC2 Keypair",
+			"Default": "DR-Demo",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		"03FWSubnetId": {			
+			"Description": "Please enter the  Firewall Subnet #1 ID",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"Default" : "subnet-6d51f805",
+			"AllowedPattern": "^subnet-[0-9a-zA-Z]{8}",
+			"ConstraintDescription": "Must be valid Subnet ID"
+		},
+		"05FWInstanceAMI": {
+            "Default": "ami-3be20354",
+            "Description": "Please enter the AMI to be used for the  FW instances",
+            "Type": "String",
+            "MinLength": "12",
+            "MaxLength": "12",
+            "AllowedPattern": "^ami-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form ami-xxxxxxxx."
+        },
+		"06FWSGId": {
+            "Description": "Please enter the SG 1 for the  FW instances",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "sg-8bf3b5e3",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        },
+		"07MgmtSubnetId": {			
+			"Description": "Please enter the  Mgmt Subnet #1 ID for Bastion, Jenkins and AV",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"Default" : "subnet-6e51f806",
+			"AllowedPattern": "^subnet-[0-9a-zA-Z]{8}",
+			"ConstraintDescription": "Must be valid Subnet ID"
+		},
+		"08BastionInstanceAMI": {
+            "Default": "ami-85c638ea",
+            "Description": "Please enter the AMI to be used for the  Bastion instances",
+            "Type": "String",
+            "MinLength": "12",
+            "MaxLength": "12",
+            "AllowedPattern": "^ami-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form ami-xxxxxxxx."
+        },
+		"09BastionSGId": {
+            "Description": "Please enter the SG 1 for the  Bastion Instances",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "sg-82f3b5ea",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        },
+		"10JenkinsInstanceAMI": {
+            "Default": "ami-97c937f8",
+            "Description": "Please enter the AMI to be used for the  Jenkins instances",
+            "Type": "String",
+            "MinLength": "12",
+            "MaxLength": "12",
+            "AllowedPattern": "^ami-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form ami-xxxxxxxx."
+        },
+		"11JenkinsSGId": {
+            "Description": "Please enter the SG 1 for the  Jenkins instances",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "sg-b2f3b5da",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        },
+		"12AVInstanceAMI": {
+            "Default": "ami-f44ea79b",
+            "Description": "Please enter the AMI to be used for the  AV instances",
+            "Type": "String",
+            "MinLength": "12",
+            "MaxLength": "12",
+            "AllowedPattern": "^ami-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form ami-xxxxxxxx."
+        },
+		"13AVSGId": {
+            "Description": "Please enter the SG 1 for the  AV instances",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "sg-8ff3b5e7",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        },
+		"14WAFSubnetId": {			
+			"Description": "Please enter the  WAF Subnet #1 ID",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"Default" : "subnet-6c51f804",
+			"AllowedPattern": "^subnet-[0-9a-zA-Z]{8}",
+			"ConstraintDescription": "Must be valid Subnet ID"
+		},
+		"15WAFInstanceAMI": {
+            "Default": "ami-7d55a412",
+            "Description": "Please enter the AMI to be used for the  WAF instances",
+            "Type": "String",
+            "MinLength": "12",
+            "MaxLength": "12",
+            "AllowedPattern": "^ami-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form ami-xxxxxxxx."
+        },
+		"16WAFSGId": {
+            "Description": "Please enter the SG 1 for the  FW instances",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "sg-8ef3b5e6",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        },
+		"18KiwiLogInstanceAMI": {
+            "Default": "ami-7248ba1d",
+            "Description": "Please enter the AMI to be used for the  WAF instances",
+            "Type": "String",
+            "MinLength": "12",
+            "MaxLength": "12",
+            "AllowedPattern": "^ami-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form ami-xxxxxxxx."
+        },
+		"19KiwiLogSGId": {
+            "Description": "Please enter the SG 1 for the  FW instances",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "sg-b6f3b5de",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        },
+		"20BastionENI": {
+            "Description": "Please enter the ENI Id for the Bastion Instance",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "eni-1625907b",
+            "AllowedPattern": "^eni-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form eni-xxxxxxxx."
+        },
+		"21JenkinsENI": {
+            "Description": "Please enter the ENI Id for the Jenkins Instance",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "eni-1725907a",
+            "AllowedPattern": "^eni-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form eni-xxxxxxxx."
+        },
+		"22AVENI": {
+            "Description": "Please enter the ENI Id for the AV Instance",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "eni-49259024",
+            "AllowedPattern": "^eni-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form eni-xxxxxxxx."
+        },
+		"23KiwiENI": {
+            "Description": "Please enter the ENI Id for the Log Instance",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "eni-763a8f1b",
+            "AllowedPattern": "^eni-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form eni-xxxxxxxx."
+        },
+		"24WAFENI": {
+            "Description": "Please enter the ENI Id for the WAF Instance",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "eni-bb3a8fd6",
+            "AllowedPattern": "^eni-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form eni-xxxxxxxx."
+        },
+		"25FWENI": {
+            "Description": "Please enter the ENI Id for the FW Instance",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "12",
+			"Default" : "eni-48259025",
+            "AllowedPattern": "^eni-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form eni-xxxxxxxx."
+        }		
+	},
+
+	"Resources": {
+		"FirewallInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": "c4.xlarge",
+                "KeyName": { "Ref": "02KeyName" },
+                "ImageId": { "Ref": "05FWInstanceAMI"  },
+				"NetworkInterfaces" : [{"NetworkInterfaceId" : {"Ref" : "25FWENI"}, "DeviceIndex" : "0" } ],
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-FW-01" }
+                ]
+            }
+        },
+		"WAFInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": "m4.xlarge",
+                "KeyName": { "Ref": "02KeyName" },
+                "ImageId": { "Ref": "15WAFInstanceAMI"  },
+				"NetworkInterfaces" : [{"NetworkInterfaceId" : {"Ref" : "24WAFENI"}, "DeviceIndex" : "0" } ],
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-WAF-01" }
+                ]
+            }
+        },
+		"KiwiLogInstance": {   
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": "m4.large",
+                "KeyName": { "Ref": "02KeyName" },
+                "ImageId": { "Ref": "18KiwiLogInstanceAMI"  },
+				"NetworkInterfaces" : [{"NetworkInterfaceId" : {"Ref" : "23KiwiENI"}, "DeviceIndex" : "0" } ],
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-LOG-SRV-01" }
+                ]
+            }
+        },
+		"BastionInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": "m4.large",
+                "KeyName": { "Ref": "02KeyName" },
+                "ImageId": { "Ref": "08BastionInstanceAMI"  },
+				"NetworkInterfaces" : [{"NetworkInterfaceId" : {"Ref" : "20BastionENI"}, "DeviceIndex" : "0" } ],
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-Bastion-01" }
+                ]
+            }
+        },
+		"JenkinsInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": "r3.large",
+                "KeyName": { "Ref": "02KeyName" },
+                "ImageId": { "Ref": "10JenkinsInstanceAMI"  },
+				"NetworkInterfaces" : [{"NetworkInterfaceId" : {"Ref" : "21JenkinsENI"}, "DeviceIndex" : "0" } ],
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-Jenkins-01" }
+                ]
+            }
+        },
+		"AVInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": "m3.large",
+                "KeyName": { "Ref": "02KeyName" },
+                "ImageId": { "Ref": "12AVInstanceAMI"  },
+				"NetworkInterfaces" : [{"NetworkInterfaceId" : {"Ref" : "22AVENI"}, "DeviceIndex" : "0" } ],
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-AV-01" }
+                ]
+            }
+        }
+		
+	},
+	"Outputs": {
+		"01BastionInstance": {
+			 "Description" : "Bastion Host",
+			 "Value" :  { "Ref" : "BastionInstance" }
+		},
+		"02JenkinsInstance": {
+			 "Description" : "Jenkins Server",
+			 "Value" :  { "Ref" : "JenkinsInstance" }
+		},
+		"03AVInstance": {
+			 "Description" : "AV Server",
+			 "Value" :  { "Ref" : "AVInstance" }
+		},
+		"04KiwiLogInstance": {
+			 "Description" : "Log Server",
+			 "Value" :  { "Ref" : "KiwiLogInstance" }
+		},
+		"05WAFInstance": {
+			 "Description" : "WAF Server",
+			 "Value" :  { "Ref" : "WAFInstance" }
+		},
+		"06FWInstance": {
+			 "Description" : "FW Server",
+			 "Value" :  { "Ref" : "FirewallInstance" }
+		}
+		
+	}
+
+
+}

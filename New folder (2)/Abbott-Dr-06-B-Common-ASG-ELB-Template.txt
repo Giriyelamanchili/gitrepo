@@ -1,0 +1,298 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Abbott-Dr-06-B-Common-ASG-ELB-Template.txt: This template creates LaunchConfiguration, AutoScaling and ELB in DR region, This can be resused for App, Dispatcher, Cache, Front and BO Servers",
+	"Parameters": {
+		"01AbbottVPC": {
+			"Description": "Select the VPC for the Subnet",
+			"Type": "AWS::EC2::VPC::Id",
+			"ConstraintDescription": "must be a existing valid VPC"
+		},
+		"02InstanceType": {
+			"Description": "ABBOTT EC2 Instance type",
+			"Type": "String",
+			"ConstraintDescription": "Must be a valid EC2 instance type"
+		},
+		"03KeyName": {
+			"Description": "Name of Existing EC2 Keypair",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		"04IAMRole": {
+			"Description": "Enter the IAM Role for the Servers",
+			"Type": "String"
+		},
+		"05SubnetId": {
+			"Description": "Select the Subnet for the Servers",
+			"Type": "AWS::EC2::Subnet::Id",
+			"ConstraintDescription": "must be a existing valid Subnet"
+		},
+
+		"06ServerAMI": {
+			"Description": "Enter Server AMI Id",
+			"Type": "String",
+			"ConstraintDescription": "Must be a valid Instance AMI Id."
+		},
+
+		"07ServerSG": {
+			"Description": "Please enter the SG to be used for the  Server",
+			"Type": "String",
+			"MinLength": "11",
+			"MaxLength": "11",
+			"AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+			"ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+		},
+		"08ELBSG": {
+			"Description": "Please enter the SG to be used for the ELB",
+			"Type": "String",
+			"MinLength": "11",
+			"MaxLength": "11",
+			"AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+			"ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+		},
+		"09SNSTopic": {
+			"Description": "Please enter the SNS topic to be used for ASG",
+			"Type": "String"
+		},
+		"10ELBName": {
+			"Description": "Please enter the Name for the ELB",
+			"Type": "String"
+		},
+		"11ASGInstanceName": {
+			"Description": "Please enter the Name for the ASG",
+			"Type": "String"
+		},
+		"12ELBHealthCheck": {
+			"Description": "Please enter the Listeners for the ELB",
+			"Type": "String"
+		},
+
+		"13ELBInstancePort": {
+			"Description": "Please enter the Port for the ELB Instance Listerner",
+			"Type": "String"
+		},
+		"14ELBInstanceProtocol": {
+			"Description": "Please enter the Protocol for the ELB Instance Listerner",
+			"Type": "String"
+		},
+		"15ELBPort": {
+			"Description": "Please enter the Port for the ELB Listerner",
+			"Type": "String"
+
+		},
+		"16ELBProtocol": {
+			"Description": "Please enter the Protocol for the ELB Listerner",
+			"Type": "String"
+
+		},
+		"17ASGMinimumCapacity": {
+			"Description": "Please enter the Minimum number of instances to be residing in the ASG",
+			"Type": "String"
+		},
+		"18ASGMaximumCapacity": {
+			"Description": "Please enter the Maximum number of instances to be residing in the ASG",
+			"Type": "String"
+		},
+		"19ASGDesiredCapacity": {
+			"Description": "Please enter the Desired number of instances to be residing in the ASG",
+			"Type": "String"
+		}
+	},
+
+	"Resources": {
+
+		"ServerLaunchConfiguration": {
+			"Type": "AWS::AutoScaling::LaunchConfiguration",
+			"Properties": {
+				"AssociatePublicIpAddress": "false",
+				"IamInstanceProfile": {
+					"Ref": "04IAMRole"
+				},
+				"ImageId": {
+					"Ref": "06ServerAMI"
+				},
+				"InstanceType": {
+					"Ref": "02InstanceType"
+				},
+				"SecurityGroups": [{
+					"Ref": "07ServerSG"
+				}]
+			}
+		},
+		"ServerELB": {
+			"Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+			"Properties": {
+				"Scheme": "internal",
+				"HealthCheck": {
+					"HealthyThreshold": "10",
+					"Interval": "30",
+					"Target": {
+						"Ref": "12ELBHealthCheck"
+					},
+					"Timeout": "5",
+					"UnhealthyThreshold": "2"
+				},
+				"LoadBalancerName": {
+					"Ref": "10ELBName"
+				},
+				"Listeners": [{
+					"InstancePort": {
+						"Ref": "13ELBInstancePort"
+					},
+					"InstanceProtocol": {
+						"Ref": "14ELBInstanceProtocol"
+					},
+					"LoadBalancerPort": {
+						"Ref": "15ELBPort"
+					},
+					"Protocol": {
+						"Ref": "16ELBProtocol"
+					}
+				}],
+				"SecurityGroups": [{
+					"Ref": "08ELBSG"
+				}],
+				"Subnets": [{
+					"Ref": "05SubnetId"
+				}],
+				"Tags": [{
+					"Key": "Application",
+					"Value": {
+						"Ref": "AWS::StackId"
+					}
+				}, {
+					"Key": "Name",
+					"Value": {
+						"Ref": "10ELBName"
+					}
+				}]
+			}
+		},
+
+		"ServerAutoScalingGroup": {
+			"Type": "AWS::AutoScaling::AutoScalingGroup",
+			"Properties": {
+				"Cooldown": "300",
+				"DesiredCapacity": {
+					"Ref": "19ASGDesiredCapacity"
+				},
+				"HealthCheckGracePeriod": "300",
+				"HealthCheckType": "EC2",
+				"LaunchConfigurationName": {
+					"Ref": "ServerLaunchConfiguration"
+				},
+				"LoadBalancerNames": [{
+					"Ref": "ServerELB"
+				}],
+				"MaxSize": {
+					"Ref": "18ASGMaximumCapacity"
+				},
+				"MinSize": {
+					"Ref": "17ASGMinimumCapacity"
+				},
+				"Tags": [{
+					"Key": "Name",
+					"Value": {
+						"Ref": "11ASGInstanceName"
+					},
+					"PropagateAtLaunch": "True"
+				}],
+				"VPCZoneIdentifier": [{
+					"Ref": "05SubnetId"
+				}],
+				"NotificationConfigurations": [{
+					"TopicARN": {
+						"Ref": "09SNSTopic"
+					},
+					"NotificationTypes": [
+						"autoscaling:EC2_INSTANCE_LAUNCH",
+						"autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+						"autoscaling:EC2_INSTANCE_TERMINATE",
+						"autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+					]
+				}]
+			}
+		},
+
+		"ServerAutoScalingScaleUpPolicy": {
+			"Type": "AWS::AutoScaling::ScalingPolicy",
+			"Properties": {
+				"AdjustmentType": "ChangeInCapacity",
+				"AutoScalingGroupName": {
+					"Ref": "ServerAutoScalingGroup"
+				},
+				"Cooldown": "300",
+				"ScalingAdjustment": "1"
+			}
+		},
+
+		"ServerAutoScalingScaleDownPolicy": {
+			"Type": "AWS::AutoScaling::ScalingPolicy",
+			"Properties": {
+				"AdjustmentType": "ChangeInCapacity",
+				"AutoScalingGroupName": {
+					"Ref": "ServerAutoScalingGroup"
+				},
+				"Cooldown": "300",
+				"ScalingAdjustment": "-1"
+			}
+		},
+
+
+		"ServerASGCPUAlarmHigh": {
+			"Type": "AWS::CloudWatch::Alarm",
+			"Properties": {
+				"AlarmDescription": "Scale-up if CPU > 80% for 1 minute",
+				"MetricName": "CPUUtilization",
+				"Namespace": "AWS/EC2",
+				"Statistic": "Average",
+				"Period": "60",
+				"EvaluationPeriods": "1",
+				"Threshold": "80",
+				"AlarmActions": [{
+					"Ref": "ServerAutoScalingScaleUpPolicy"
+				}],
+				"Dimensions": [{
+					"Name": "AutoScalingGroupName",
+					"Value": {
+						"Ref": "ServerAutoScalingGroup"
+					}
+				}],
+				"ComparisonOperator": "GreaterThanThreshold"
+			}
+		},
+		"ServerASGCPUAlarmLow": {
+			"Type": "AWS::CloudWatch::Alarm",
+			"Properties": {
+				"AlarmDescription": "Scale-down if CPU < 40% for 5 minutes",
+				"MetricName": "CPUUtilization",
+				"Namespace": "AWS/EC2",
+				"Statistic": "Average",
+				"Period": "300",
+				"EvaluationPeriods": "1",
+				"Threshold": "40",
+				"AlarmActions": [{
+					"Ref": "ServerAutoScalingScaleDownPolicy"
+				}],
+				"Dimensions": [{
+					"Name": "AutoScalingGroupName",
+					"Value": {
+						"Ref": "ServerAutoScalingGroup"
+					}
+				}],
+				"ComparisonOperator": "LessThanThreshold"
+			}
+		}
+
+	},
+
+	"Outputs": {
+		"ELBURL": {
+			"Description": "The URL of the website",
+			"Value": {
+				"Fn::Join": ["", ["http://", {
+					"Fn::GetAtt": ["ServerELB", "DNSName"]
+				}]]
+			}
+		}
+
+	}
+}

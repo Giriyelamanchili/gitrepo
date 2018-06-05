@@ -1,0 +1,276 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Abbott-Dr-02-SGRules-Template.txt - This is the creates the security Groups rules for all the instances",
+	"Parameters" : {	  
+			"sgBastionId": {
+				 "Description" : "Security Group for Bastion",
+				 "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-82f3b5ea",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			
+			"sgJenkinsId": {
+				 "Description" : "Security Group for Jenkins",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-b2f3b5da",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			
+			
+			"sgAntiVirusId": {
+				 "Description" : "Security Group for AV",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-8ff3b5e7",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			
+			"sgKiwiLogServerId": {
+				 "Description" : "Security Group for Log Server",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-b6f3b5de",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			
+        	"sgFirewallId": {
+				 "Description" : "Security Group for Firewall",
+				 "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-8bf3b5e3",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			
+			"sgWAFId": {
+				 "Description" : "Security Group for WAF",
+				 "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-8ef3b5e6",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+						
+			"sgAppId": {
+				 "Description" : "Security Group for App Servers",
+				 "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-83f3b5eb",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			
+			"sgDispatcherId": {
+				 "Description" : "Security Group for Dispatcher Server",
+				 "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-81f3b5e9",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgAuthorId": {
+				 "Description" : "Security Group for Author Servers",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-bef3b5d6",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			
+			"sgPublisherId": {
+				 "Description" : "Security Group for Publisher Servers",
+				 "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-88f3b5e0",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			
+			"sgCacheId": {
+				 "Description" : "Security Group for Cache Servers",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-b7f3b5df",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgFrontId": {
+				 "Description" : "Security Group for Front Servers",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-84f3b5ec",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			
+			"sgBOId": {
+				 "Description" : "Security Group for BO Servers",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-b4f3b5dc",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			
+			"sgFtpId": {
+				 "Description" : "Security Group for SFTP Servers",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-bff3b5d7",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgNFSId": {
+				 "Description" : "Security Group for NFS Servers",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-b1f3b5d9",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgMemcacheForRdsOGId": {
+				 "Description" : "Security Group for MEM CACHED RDS",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-8af3b5e2",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgRDSReadReplicaId": {
+				 "Description" : "Security Group for RDS instance",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-8cf3b5e4",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgDispatcherELBId": {
+				 "Description" : "Security Group for Dispatcher ELB",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-b3f3b5db",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgAppELBId": {
+				 "Description" : "Security Group for App ELB",
+				 "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-89f3b5e1",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgPublisherELBId": {
+				 "Description" : "Security Group for Publisher ELB",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-b5f3b5dd",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgCacheELBId": {
+				 "Description" : "Security Group for Cache ELB",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-b0f3b5d8",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgFrontELBId": {
+				 "Description" : "Security Group for magento FE ELB",
+				 "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-8df3b5e5",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			},
+			"sgBOELBId": {
+				 "Description" : "Security Group for MBO ELB",
+				  "Type": "String",
+				 "MinLength": "11",
+				 "MaxLength": "11",
+				 "Default" : "sg-80f3b5e8",
+				 "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+				 "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+			}
+			
+	},
+	"Resources": {
+				
+		"sgbastionIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgBastionId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		
+		"sgFirewallIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgFirewallId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgWAFIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgWAFId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgJenkinsIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgJenkinsId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgAntiVirusIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgAntiVirusId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgKiwiLogServerIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgKiwiLogServerId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgAppIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgAppId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgDispatcherIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgDispatcherId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgPublisherIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgPublisherId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgAuthorIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgAuthorId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgCacheIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgCacheId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgFrontIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgFrontId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgBOIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgBOId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgFtpIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgFtpId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgNFSIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgNFSId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgDispatcherELBIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgDispatcherELBId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgAppELBIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgAppELBId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgPublisherELBIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgPublisherELBId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgCacheELBIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgCacheELBId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgFrontELBIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgFrontELBId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgBOELBIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgBOELBId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgMemcacheForRdsOGIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgMemcacheForRdsOGId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } },
+		
+		"sgRDSReadReplicaIngress1": { "Type": "AWS::EC2::SecurityGroupIngress", "Properties": { "GroupId": { "Ref": "sgRDSReadReplicaId" }, "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535",  "CidrIp": "10.0.0.0/16"  } }
+		
+    }
+}

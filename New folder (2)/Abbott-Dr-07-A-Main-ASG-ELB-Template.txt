@@ -1,0 +1,625 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Abbott-Dr-07-A-Main-ASG-ELB-Template.txt: This template creates LaunchConfiguration, AutoScaling and ELB in DR region, This can be resused for App, Dispatcher, Cache, Front and BO Servers",
+	"Parameters": {
+		"01CommonASGELBTemplateURL" : {
+			"Default" : "https://s3.amazonaws.com/abbott-dr-artifacts/cfm-scripts/Abbott-Dr-05-B-Common-ASG-ELB-Template.txt",
+			"Description" : "Please enter the S3 URL of the Abbott-Dr-04-B-Common-ASG-ELB-Template.txt file.",
+			"Type" : "String"
+		},
+		"02AbbottVPC": {
+			"Description": "Select the VPC for the Subnet",
+			"Default": "vpc-cb1af4a3",
+			"Type": "AWS::EC2::VPC::Id",
+			"ConstraintDescription": "Must be a existing valid VPC"
+		},
+		"03SNSTopicMailIds": {
+            "Description": "Please enter the SNS topic to be used for ASG",
+			"Default": "suma-5.s-5@cognizant.com",
+            "Type": "String"
+        },
+		"04AppServerKeyName": {
+			"Description": "Name of Existing EC2 Keypair for App Server",
+			"Default": "DR-Demo",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		"05AppServerIAMRole": {
+			"Description": "Enter the IAM Role for App Server",
+			"Default": "Abbott-Libre-EMEA-User",
+			"Type": "String"
+		},
+		"06AppServerSubnetId": {
+			"Description": "Select the Subnet for App Server",
+			"Default": "subnet-42bd1f2a",
+			"Type": "AWS::EC2::Subnet::Id",
+			"ConstraintDescription": "must be a existing valid Subnet"
+		},
+		
+		"07AppServerAMI": {
+			"Description": "Enter Server AMI Id for App Server",
+			"Type": "String",
+			"Default": "ami-332ad45c",
+			"ConstraintDescription": "Must be a valid Instance AMI Id."
+		},
+		
+		"08AppServerSG": {
+            "Description": "Please enter the SG to be used for App Server",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-ec3b4584",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+        },
+		"09AppELBSG": {
+            "Description": "Please enter the SG to be used for App Server ELB",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-173b457f",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        },
+				
+		"10DispatcherServerKeyName": {
+			"Description": "Name of Existing EC2 Keypair for Dispatcher Server",
+			"Default": "DR-Demo",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		"11DispatcherServerIAMRole": {
+			"Description": "Enter the IAM Role for Dispatcher Server",
+			"Default": "Abbott-Libre-EMEA-User",
+			"Type": "String"
+		},
+		"12DispatcherServerSubnetId": {
+			"Description": "Select the Subnet for Dispatcher Server",
+			"Default": "subnet-43bd1f2b",
+			"Type": "AWS::EC2::Subnet::Id",
+			"ConstraintDescription": "must be a existing valid Subnet"
+		},
+		
+		"13DispatcherServerAMI": {
+			"Description": "Enter Server AMI Id for Dispatcher Server",
+			"Type": "String",
+			"Default": "ami-702bd51f",
+			"ConstraintDescription": "Must be a valid Instance AMI Id."
+		},
+		
+		"14DispatcherServerSG": {
+            "Description": "Please enter the SG to be used for Dispatcher Server",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-153b457d",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+        },
+		"15DispatcherELBSG": {
+            "Description": "Please enter the SG to be used for Dispatcher Server ELB",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-133b457b",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        },
+				
+		"16CacheServerKeyName": {
+			"Description": "Name of Existing EC2 Keypair for Cache Server",
+			"Default": "DR-Demo",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		"17CacheServerIAMRole": {
+			"Description": "Enter the IAM Role for Cache Server",
+			"Default": "Abbott-Libre-EMEA-User",
+			"Type": "String"
+		},
+		"18CacheServerSubnetId": {
+			"Description": "Select the Subnet for Cache Server",
+			"Default": "subnet-4cbd1f24",
+			"Type": "AWS::EC2::Subnet::Id",
+			"ConstraintDescription": "must be a existing valid Subnet"
+		},
+		"19CacheServerAMI": {
+			"Description": "Enter Server AMI Id for Cache Server",
+			"Type": "String",
+			"Default": "ami-c42ed0ab",
+			"ConstraintDescription": "Must be a valid Instance AMI Id."
+		},
+		
+		"20CacheServerSG": {
+            "Description": "Please enter the SG to be used for Cache Server",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-e33b458b",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+        },
+		"21CacheELBSG": {
+            "Description": "Please enter the SG to be used for Cache Server ELB",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-ef3b4587",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        },
+		
+		"22FrontServerKeyName": {
+			"Description": "Name of Existing EC2 Keypair for Front Server",
+			"Default": "DR-Demo",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		"23FrontServerIAMRole": {
+			"Description": "Enter the IAM Role for Front Server",
+			"Default": "Abbott-Libre-EMEA-User",
+			"Type": "String"
+		},
+		"24FrontServerSubnetId": {
+			"Description": "Select the Subnet for Front Server",
+			"Default": "subnet-4ebd1f26",
+			"Type": "AWS::EC2::Subnet::Id",
+			"ConstraintDescription": "must be a existing valid Subnet"
+		},
+		"25FrontServerAMI": {
+			"Description": "Enter Server AMI Id for Front Server",
+			"Type": "String",
+			"Default": "ami-af2fd1c0",
+			"ConstraintDescription": "Must be a valid Instance AMI Id."
+		},
+		"26FrontServerSG": {
+            "Description": "Please enter the SG to be used for Front Server",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-143b457c",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+        },
+		"27FrontELBSG": {
+            "Description": "Please enter the SG to be used for Front Server ELB",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-e83b4580",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        },
+				
+		"28AuthorServerKeyName": {
+			"Description": "Name of Existing EC2 Keypair for Author Server",
+			"Default": "DR-Demo",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		
+		"29AuthorServerSubnetId": {
+			"Description": "Select the Subnet for Author Server",
+			"Default": "subnet-4abd1f22",
+			"Type": "AWS::EC2::Subnet::Id",
+			"ConstraintDescription": "must be a existing valid Subnet"
+		},
+		"30AuthorServerIAMRole": {
+			"Description": "Enter the IAM Role for Author Server",
+			"Default": "Abbott-Libre-EMEA-User",
+			"Type": "String"
+		},
+		
+		"31AuthorServerAMI": {
+			"Description": "Enter Server AMI Id for Author Server",
+			"Type": "String",
+			"Default": "ami-3d2ad452",
+			"ConstraintDescription": "Must be a valid Instance AMI Id."
+		},
+		
+		"32AuthorServerSG": {
+            "Description": "Please enter the SG to be used for Author Server",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-eb3b4583",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+        },
+				
+		"33SFTPServerKeyName": {
+			"Description": "Name of Existing EC2 Keypair for SFTP Server",
+			"Default": "DR-Demo",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		
+		"34SFTPServerSubnetId": {
+			"Description": "Select the Subnet for SFTP Server",
+			"Default": "subnet-4bbd1f23",
+			"Type": "AWS::EC2::Subnet::Id",
+			"ConstraintDescription": "must be a existing valid Subnet"
+		},
+		"35SFTPServerIAMRole": {
+			"Description": "Enter the IAM Role for SFTP Server",
+			"Default": "Abbott-Libre-EMEA-User",
+			"Type": "String"
+		},
+		
+		"36SFTPServerAMI": {
+			"Description": "Enter Server AMI Id for SFTP Server",
+			"Type": "String",
+			"Default": "ami-f72cd298",
+			"ConstraintDescription": "Must be a valid Instance AMI Id."
+		},
+		
+		"37SFTPServerSG": {
+            "Description": "Please enter the SG to be used for SFTP Server",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-ea3b4582",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+        },
+				
+		"38MBOServerKeyName": {
+			"Description": "Name of Existing EC2 Keypair for MBO Server",
+			"Default": "DR-Demo",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		
+		"39MBOServerSubnetId": {
+			"Description": "Select the Subnet for MBO Server",
+			"Default": "subnet-4bbd1f23",
+			"Type": "AWS::EC2::Subnet::Id",
+			"ConstraintDescription": "must be a existing valid Subnet"
+		},
+		"40MBOServerIAMRole": {
+			"Description": "Enter the IAM Role for MBO Server",
+			"Default": "Abbott-Libre-EMEA-User",
+			"Type": "String"
+		},
+		
+		"41MBOServerAMI": {
+			"Description": "Enter Server AMI Id for MBO Server",
+			"Type": "String",
+			"Default": "ami-c12dd3ae",
+			"ConstraintDescription": "Must be a valid Instance AMI Id."
+		},
+		"42MBOServerSG": {
+            "Description": "Please enter the SG to be used for MBO Server",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-e93b4581",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+        },
+		
+		"43PublisherServerKeyName": {
+			"Description": "Name of Existing EC2 Keypair for Publisher Server",
+			"Default": "DR-Demo",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		
+		"44PublishererverSubnetId": {
+			"Description": "Select the Subnet for Publisher Server",
+			"Default": "subnet-4dbd1f25",
+			"Type": "AWS::EC2::Subnet::Id",
+			"ConstraintDescription": "must be a existing valid Subnet"
+		},
+		"45PublisherServerIAMRole": {
+			"Description": "Enter the IAM Role for Publisher Server",
+			"Default": "Abbott-Libre-EMEA-User",
+			"Type": "String"
+		},
+		
+		"46PublisherServerAMI": {
+			"Description": "Enter Server AMI Id for Publisher Server",
+			"Type": "String",
+			"Default": "ami-652bd50a",
+			"ConstraintDescription": "Must be a valid Instance AMI Id."
+		},
+		
+		"47PublisherServerSG": {
+            "Description": "Please enter the SG to be used for Publisher Server",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-103b4578",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid AMI ID in the form sg-xxxxxxxx."
+        },
+		
+		"48PublisherELBHealthCheck": {
+            "Description": "Please enter the Listeners for the Publisher ELB",
+            "Type": "String",
+			"Default" : "TCP:4503"
+        },
+		"49PublisherELBInstancePort": {
+            "Description": "Please enter the Port for the Publisher ELB Instance Listerner",
+            "Type": "String",
+			"Default" : "80"
+        },
+		"50PublisherELBInstanceProtocol": {
+            "Description": "Please enter the Protocol for the Publisher ELB Instance Listerner",
+            "Type": "String",
+			"Default" : "HTTP"
+        },
+		"51PublisherELBPort": {
+            "Description": "Please enter the Port for the Publisher ELB Listerner",
+            "Type": "String",
+			"Default" : "80"
+        },
+		"52PublisherELBProtocol": {
+            "Description": "Please enter the Protocol for the Publisher ELB Listerner",
+            "Type": "String",
+			"Default" : "HTTP"
+        },
+		"53PublisherELBSG": {
+            "Description": "Please enter the SG to be used for the Publisher ELB",
+            "Type": "String",
+            "MinLength": "11",
+            "MaxLength": "11",
+			"Default" : "sg-ee3b4586",
+            "AllowedPattern": "^sg-[0-9a-zA-Z]{8}",
+            "ConstraintDescription": "Must be valid SG ID in the form sg-xxxxxxxx."
+        }
+		
+	},
+
+	"Resources": {
+		"SNSTopic": {
+			  "Type" : "AWS::SNS::Topic",
+			  "Properties" : {
+				"DisplayName" : "AbbottSNSTopic",
+				"Subscription" : [ {
+				  "Endpoint" : { "Ref" : "03SNSTopicMailIds" },
+				  "Protocol" : "email"
+				} ],
+				"TopicName" : "Abbott-DR-Topic"
+			  }
+		},
+		"AppServerTemplate.ELBURL" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+				"TemplateURL" : { "Ref" : "01CommonASGELBTemplateURL" },
+				"Parameters" : {
+					"01AbbottVPC" : { "Ref" : "02AbbottVPC" },
+					"02InstanceType" : "r3.xlarge",
+					"03KeyName" : { "Ref" : "04AppServerKeyName" },
+					"04IAMRole" : { "Ref" : "05AppServerIAMRole" },
+					"05SubnetId" : { "Ref" : "06AppServerSubnetId" },
+					"06ServerAMI" : { "Ref" : "07AppServerAMI" },
+					"07ServerSG" : { "Ref" : "08AppServerSG" },
+					"08ELBSG" : { "Ref" : "09AppELBSG" },
+					"09SNSTopic" : { "Ref" : "SNSTopic" },
+					"10ELBName" : "DR-APP-ELB",
+					"11ASGInstanceName" :"DR-APP-ASG",
+					"12ELBHealthCheck" : "TCP:80",
+					"13ELBInstancePort" : "80",
+					"14ELBInstanceProtocol" : "HTTP",
+					"15ELBPort" :  "80",
+					"16ELBProtocol" : "HTTP",
+					"17ASGMinimumCapacity" : "2",
+					"18ASGMaximumCapacity" : "4",
+					"19ASGDesiredCapacity" : "2"
+				}
+			}
+		},
+		
+		"DispatcherServerTemplate.ELBURL" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+				"TemplateURL" : { "Ref" : "01CommonASGELBTemplateURL" },
+				"Parameters" : {
+					"01AbbottVPC" : { "Ref" : "02AbbottVPC" },
+					"02InstanceType" : "r3.xlarge",
+					"03KeyName" : { "Ref" : "10DispatcherServerKeyName" },
+					"04IAMRole" : { "Ref" : "11DispatcherServerIAMRole" },
+					"05SubnetId" : { "Ref" : "12DispatcherServerSubnetId" },
+					"06ServerAMI" : { "Ref" : "13DispatcherServerAMI" },
+					"07ServerSG" : { "Ref" : "14DispatcherServerSG" },
+					"08ELBSG" : { "Ref" : "15DispatcherELBSG" },
+					"09SNSTopic" : { "Ref" : "SNSTopic" },
+					"10ELBName" : "DR-DISP-ELB",
+					"11ASGInstanceName" : "DR-DISP-ASG",
+					"12ELBHealthCheck" : "TCP:80",
+					"13ELBInstancePort" : "80",
+					"14ELBInstanceProtocol" : "HTTP",
+					"15ELBPort" :  "80",
+					"16ELBProtocol" : "HTTP",
+					"17ASGMinimumCapacity" : "2",
+					"18ASGMaximumCapacity" : "4",
+					"19ASGDesiredCapacity" : "2"
+				}
+			}
+		},
+		
+		"CacheServerTemplate.ELBURL" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+				"TemplateURL" : { "Ref" : "01CommonASGELBTemplateURL" },
+				"Parameters" : {
+					"01AbbottVPC" : { "Ref" : "02AbbottVPC" },
+					"02InstanceType" : "r3.xlarge",
+					"03KeyName" : { "Ref" : "16CacheServerKeyName" },
+					"04IAMRole" : { "Ref" : "17CacheServerIAMRole" },
+					"05SubnetId" : { "Ref" : "18CacheServerSubnetId" },
+					"06ServerAMI" : { "Ref" : "19CacheServerAMI" },
+					"07ServerSG" : { "Ref" : "20CacheServerSG" },
+					"08ELBSG" : { "Ref" : "21CacheELBSG" },
+					"09SNSTopic" : { "Ref" : "SNSTopic" },
+					"10ELBName" : "DR-CACHE-ELB",
+					"11ASGInstanceName" : "DR-CACHE-ASG",
+					"12ELBHealthCheck" : "TCP:80",
+					"13ELBInstancePort" : "80",
+					"14ELBInstanceProtocol" : "TCP",
+					"15ELBPort" :  "80",
+					"16ELBProtocol" : "TCP",
+					"17ASGMinimumCapacity" : "2",
+					"18ASGMaximumCapacity" : "4",
+					"19ASGDesiredCapacity" : "2"
+				}
+			}
+		},
+		
+		"FrontServerTemplate.ELBURL" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+				"TemplateURL" : { "Ref" : "01CommonASGELBTemplateURL" },
+				"Parameters" : {
+					"01AbbottVPC" : { "Ref" : "02AbbottVPC" },
+					"02InstanceType" : "r3.xlarge",
+					"03KeyName" : { "Ref" : "22FrontServerKeyName" },
+					"04IAMRole" : { "Ref" : "23FrontServerIAMRole" },
+					"05SubnetId" : { "Ref" : "24FrontServerSubnetId" },
+					"06ServerAMI" : { "Ref" : "25FrontServerAMI" },
+					"07ServerSG" : { "Ref" : "26FrontServerSG" },
+					"08ELBSG" : { "Ref" : "27FrontELBSG" },
+					"09SNSTopic" : { "Ref" : "SNSTopic" },
+					"10ELBName" : "DR-FRONT-ELB",
+					"11ASGInstanceName" : "DR-FRONT-ASG",
+					"12ELBHealthCheck" : "TCP:80",
+					"13ELBInstancePort" : "80",
+					"14ELBInstanceProtocol" : "TCP",
+					"15ELBPort" :  "80",
+					"16ELBProtocol" : "TCP",
+					"17ASGMinimumCapacity" : "2",
+					"18ASGMaximumCapacity" : "8",
+					"19ASGDesiredCapacity" : "2"
+				}
+			}
+		},
+		
+		"AuthorInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": "r3.xlarge",
+                "SubnetId": { "Ref": "29AuthorServerSubnetId" },
+                "KeyName": { "Ref": "28AuthorServerKeyName" },
+                "ImageId": { "Ref": "31AuthorServerAMI"  },
+                "SecurityGroupIds": [ { "Ref": "32AuthorServerSG" }],
+				"IamInstanceProfile" : { "Ref" : "30AuthorServerIAMRole" },
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-AEM-AUTH-01" }
+                ]
+            }
+        },
+		"SFTPInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType":  "m3.medium",
+                "SubnetId": { "Ref": "34SFTPServerSubnetId" },
+                "KeyName": { "Ref": "33SFTPServerKeyName" },
+                "ImageId": { "Ref": "36SFTPServerAMI"  },
+                "SecurityGroupIds": [ { "Ref": "37SFTPServerSG" }],
+				"IamInstanceProfile" : { "Ref" : "35SFTPServerIAMRole" },
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-SFTP-01" }
+                ]
+            }
+        },
+		"MBOInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType":  "r3.xlarge",
+                "SubnetId": { "Ref": "39MBOServerSubnetId" },
+                "KeyName": { "Ref": "38MBOServerKeyName" },
+                "ImageId": { "Ref": "41MBOServerAMI"  },
+                "SecurityGroupIds": [ { "Ref": "42MBOServerSG" }],
+				"IamInstanceProfile" : { "Ref" : "40MBOServerIAMRole" },
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-MBO-01" }
+                ]
+            }
+        },
+		
+		"PublisherInstance1": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType":  "r3.xlarge",
+                "SubnetId": { "Ref": "44PublishererverSubnetId" },
+                "KeyName": { "Ref": "43PublisherServerKeyName" },
+                "ImageId": { "Ref": "46PublisherServerAMI"  },
+                "SecurityGroupIds": [ { "Ref": "47PublisherServerSG" }],
+				"IamInstanceProfile" : { "Ref" : "45PublisherServerIAMRole" },
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-MBO-01" }
+                ]
+            }
+        },
+		"PublisherInstance2": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType":  "r3.xlarge",
+                "SubnetId": { "Ref": "44PublishererverSubnetId" },
+                "KeyName": { "Ref": "43PublisherServerKeyName" },
+                "ImageId": { "Ref": "46PublisherServerAMI"  },
+                "SecurityGroupIds": [ { "Ref": "47PublisherServerSG" }],
+				"IamInstanceProfile" : { "Ref" : "45PublisherServerIAMRole" },
+                "Tags": [
+                     { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-MBO-01" }
+                ]
+            }
+        },
+		
+		"PublisherELB" : {
+		   "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+		   "Properties": {
+			  "Scheme" : "internal",
+			  "Instances" : [ { "Ref" : "PublisherInstance1" },{ "Ref" : "PublisherInstance2" } ],
+			  "HealthCheck" : {
+				   "HealthyThreshold" : "10",
+				   "Interval" : "30",
+				   "Target" : { "Ref" : "48PublisherELBHealthCheck" },
+				   "Timeout" : "5",
+				   "UnhealthyThreshold" : "2"
+				},			  			 
+			  "LoadBalancerName" : "DR-PUB-ELB",
+			  "Listeners" : [ {
+					   "InstancePort" :  { "Ref" : "49PublisherELBInstancePort" },
+					   "InstanceProtocol" : { "Ref" : "50PublisherELBInstanceProtocol" },
+					   "LoadBalancerPort" : { "Ref" : "51PublisherELBPort" },
+					   "Protocol" : { "Ref" : "52PublisherELBProtocol" }
+					}],
+					
+			  "SecurityGroups" : [{"Ref" : "53PublisherELBSG"}],
+			  "Subnets" : [ {"Ref" : "44PublishererverSubnetId"} ],
+			  "Tags" : [ { "Key": "Application", "Value": { "Ref": "AWS::StackId" } },
+                     { "Key": "Name",     "Value": "DR-PUB-ELB" } ]
+		   }
+		}
+		
+		
+	},
+	"Outputs": {
+		"AppELB" : {
+			 "Description" : "URL for Publisher ELB",
+			 "Value" :  { "Ref" : "AppServerTemplate.ELBURL" }
+		},
+		
+		"DispELB" : {
+			 "Description" : "URL for Publisher ELB",
+			 "Value" :  { "Ref" : "DispatcherServerTemplate.ELBURL" }
+		},
+		"CacheServerELB" : {
+			 "Description" : "URL for Publisher ELB",
+			 "Value" :  { "Ref" : "CacheServerTemplate.ELBURL" }
+		},
+		"FrontServerELB" : {
+			 "Description" : "URL for Publisher ELB",
+			 "Value" :  { "Ref" : "FrontServerTemplate.ELBURL" }
+		},
+		"PublisherELB": {
+			"Description": "The URL of the website",
+			"Value": {
+				"Fn::Join": ["", ["http://", {
+					"Fn::GetAtt": ["PublisherELB", "DNSName"]
+				}]]
+			}
+		}
+	}
+
+
+}
