@@ -1,0 +1,260 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Abbott-DR-00-Master-Template.txt - This is the main template used to create child templates. This template will take user input (Parameters) and/or pass created resource objects (using Ref) to it's declared child templates (::Stack) as appropriate",
+	"Parameters" : {
+		"01VPCCIDRBlock": {
+			"Default": "10.0.0.0/16",
+			"Description": "Please enter the CIDR Block for the Production/Staging VPC",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"02VpcAzs1": {
+			"Description": "Availability zone #1 in which subnets should be created",
+			"Type": "String",
+			"Default": "eu-central-1a"
+		},
+		"03VpcAzs2": {
+			"Description": "Availability zone #2 in which subnets should be created",
+			"Type": "String",
+			"Default": "eu-central-1b"
+		},
+		"04MgmtSubnetCIDR": {
+			"Default": "10.0.0.0/27",
+			"Description": "Please enter the CIDR Block for the Management Subnet: Bastion, Jenkins AV ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"05FWSubnetCIDR": {
+			"Default": "10.0.0.32/27",
+			"Description": "Please enter the CIDR Block for the Author Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"06AppSubnetCIDR": {
+			"Default": "10.0.0.64/27",
+			"Description": "Please enter the CIDR Block for the App Subnet",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"07DispatcherSubnetCIDR": {
+			"Default": "10.0.0.96/27",
+			"Description": "Please enter the CIDR Block for the Dispatcher Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"08PublisherSubnetCIDR": {
+			"Default": "10.0.0.128/27",
+			"Description": "Please enter the CIDR Block for the Publisher Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"09AuthorSubnetCIDR": {
+			"Default": "10.0.0.160/27",
+			"Description": "Please enter the CIDR Block for the Author Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"10CacheSubnetCIDR": {
+			"Default": "10.0.0.192/27",
+			"Description": "Please enter the CIDR Block for the Cache Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"11FrontSubnetCIDR": {
+			"Default": "10.0.0.224/27",
+			"Description": "Please enter the CIDR Block for the Front Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"12BOSubnetCIDR": {
+			"Default": "10.0.1.0/27",
+			"Description": "Please enter the CIDR Block for the BO Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"13RDSDBSubnet1CIDR": {
+			"Default": "10.0.1.32/27",
+			"Description": "Please enter the CIDR Block for the RDS Subnet in AZ1 ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"14RDSDBSubnet2CIDR": {
+			"Default": "10.0.1.64/27",
+			"Description": "Please enter the CIDR Block for the RDS Subnet in AZ 2",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		"15FTPSubnetCIDR": {
+			"Default": "10.0.1.96/27",
+			"Description": "Please enter the CIDR Block for the FTP Subnet ",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"AllowedPattern": "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})?",
+			"ConstraintDescription": "Must be valid CIDR net block in the form x.x.x.x/x."
+		},
+		
+		"001AbbottDR01NetworkTemplate" : {
+			"Default" : "https://s3.amazonaws.com/abbott-dr-artifacts/cfm-scripts/Abbott-DR-01-Network-Template.txt",
+			"Description" : "Please enter the S3 URL of the Abbott-DR-01-Network-Template file.",
+			"Type" : "String"
+		},
+		"002AbbottDR02SGTemplate" : {
+			"Default" : "https://s3.amazonaws.com/abbott-dr-artifacts/cfm-scripts/Abbott-Dr-02-SG-Template.txt",
+			"Description" : "Please enter the S3 URL of the Abbott-Dr-02-SG-Template file.",
+			"Type" : "String"
+		},
+		"003AbbottDR03SGMgmtTemplate" : {
+			"Default" : "https://s3.amazonaws.com/abbott-dr-artifacts/cfm-scripts/Abbott-Dr-03-Security-Mgmt-Template.txt",
+			"Description" : "Please enter the S3 URL of the Abbott-Dr-03-Security-Mgmt-Template file.",
+			"Type" : "String"
+		},
+		"004AbbottDR04AMainASGELBTemplate" : {
+			"Default" : "https://s3.amazonaws.com/abbott-dr-artifacts/cfm-scripts/Abbott-Dr-04-A-Main-ASG-ELB-Template.txt",
+			"Description" : "Please enter the S3 URL of the Abbott-Dr-04-A-Main-ASG-ELB-Template.txt file.",
+			"Type" : "String"
+		},
+		"005AbbottDR04BCommonASGELBTemplate" : {
+			"Default" : "https://s3.amazonaws.com/abbott-dr-artifacts/cfm-scripts/Abbott-Dr-04-B-Common-ASG-ELB-Template.txt",
+			"Description" : "Please enter the S3 URL of the Abbott-Dr-04-B-Common-ASG-ELB-Template file.",
+			"Type" : "String"
+		}
+				
+	},
+	"Resources": {
+		
+		"01AbbottDR01NetworkTemplate" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+				"TemplateURL" : { "Ref" : "001AbbottDR01NetworkTemplate" }	,
+				"Parameters" : {
+					"01VPCCIDRBlock" : { "Ref" : "01VPCCIDRBlock" },
+					"02VpcAzs1" : { "Ref" : "02VpcAzs1" },
+					"03VpcAzs2" : { "Ref" : "03VpcAzs2" },
+					"04MgmtSubnetCIDR" : { "Ref" : "PublicSubnet1CIDRBlock" },
+					"PublicSubnet2CIDRBlock" : { "Ref" : "PublicSubnet2CIDRBlock" },
+					"AppLayerSubnet1CIDRBlock" : { "Ref" : "AppLayerSubnet1CIDRBlock" },
+					"AppLayerSubnet2CIDRBlock" : { "Ref" : "AppLayerSubnet2CIDRBlock" },
+					"DBLayerSubnet1CIDRBlock" : { "Ref" : "DBLayerSubnet1CIDRBlock" },
+					"DBLayerSubnet2CIDRBlock" : { "Ref" : "DBLayerSubnet2CIDRBlock" },
+					"DHCPOptionsDomainName" : { "Ref" : "DHCPOptionsDomainName" },
+					"DomainNameServers1Ip" : { "Ref" : "DomainNameServers1Ip" },
+					"DomainNameServers2Ip" : { "Ref" : "DomainNameServers2Ip" }
+				}				
+			}
+		},
+	
+		"LNGCoreNetworkTemplate" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+				"TemplateURL" : { "Ref" : "LNGCoreNetworkTemplateURL" },
+				"Parameters" : {
+					"VpcAzs1" : { "Ref" : "VpcAzs1" },
+					"VpcAzs2" : { "Ref" : "VpcAzs2" },
+					"VPCCIDRBlock" : { "Ref" : "VPCCIDRBlock" },
+					"PublicSubnet1CIDRBlock" : { "Ref" : "PublicSubnet1CIDRBlock" },
+					"PublicSubnet2CIDRBlock" : { "Ref" : "PublicSubnet2CIDRBlock" },
+					"AppLayerSubnet1CIDRBlock" : { "Ref" : "AppLayerSubnet1CIDRBlock" },
+					"AppLayerSubnet2CIDRBlock" : { "Ref" : "AppLayerSubnet2CIDRBlock" },
+					"DBLayerSubnet1CIDRBlock" : { "Ref" : "DBLayerSubnet1CIDRBlock" },
+					"DBLayerSubnet2CIDRBlock" : { "Ref" : "DBLayerSubnet2CIDRBlock" },
+					"DHCPOptionsDomainName" : { "Ref" : "DHCPOptionsDomainName" },
+					"DomainNameServers1Ip" : { "Ref" : "DomainNameServers1Ip" },
+					"DomainNameServers2Ip" : { "Ref" : "DomainNameServers2Ip" }
+				}
+			}
+		},
+		
+		"LNGNetworkSecurityGroupTemplate" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+				"TemplateURL" : { "Ref" : "LNGSecurityGroupsTemplateURL" },
+				"Parameters" : {
+					"VPCID" : { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.LNGVPCID" ] }					
+				}
+			}
+		},
+		
+		"LNGNATTemplate" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+				"TemplateURL" : { "Ref" : "LNGNATTemplateURL" },
+				"Parameters" : {
+					"VPCID" : { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.LNGVPCID" ] },
+					"PublicSubnetID1" :  { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.PublicSubnet1" ] },
+					"PublicSubnetID2" :  { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.PublicSubnet2" ] },
+					"NATInstanceAMI" : { "Ref" : "NATInstanceAMI" },
+					"NATKeyPair" : { "Ref" : "NATKeyPair" },
+					"NATSg1" : { "Fn::GetAtt" : [ "LNGNetworkSecurityGroupTemplate", "Outputs.sgnatgatewayID" ] },	
+					"NATSg2" : { "Fn::GetAtt" : [ "LNGNetworkSecurityGroupTemplate", "Outputs.sgoutinternetaccessID" ] }
+				}
+			}
+		},
+		
+		"LNGRouteTableEntriesTemplate" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+				"TemplateURL" : { "Ref" : "LNGRTbEntriesTemplateURL" },
+				"Parameters" : {
+					"VPCID" : { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.LNGVPCID" ] },
+					"DBandAppRouteTableID" :  { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.VPNSeattleRouteTable" ] },
+					"PublicRouteTableID" :  { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.PublicRouteTable" ] },
+					"VirtualPrivateGateway" : { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.LNGVGWID" ] },
+					"NATID" : { "Fn::GetAtt" : [ "LNGNATTemplate", "Outputs.NATInstanceID1" ] }			
+				}
+			}
+		},		
+		
+		"LNGNACLEntriesTemplate" : {
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+				"TemplateURL" : { "Ref" : "LNGNAClEntriesTemplateURL" },
+				"Parameters" : {
+					"PublicSubnetsNACL" : { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.PublicNACL" ] },
+					"DBSubnetsNACL" :  { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.AppLayerNACL" ] },
+					"AppSubnetsNACL" :  { "Fn::GetAtt" : [ "LNGCoreNetworkTemplate", "Outputs.DBLayerNACL" ] }
+							
+				}
+			}
+		}
+		
+		
+	}
+	
+}
